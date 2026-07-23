@@ -14,9 +14,5 @@ Ele é executado sozinho, automaticamente, sempre que você abre a página espec
 It runs on its own, automatically, every time you open the page specified in the script's @ match
 
 <br><div align="center">
-
-**Developed by / Desenvolvido por:** <a href="https://github.com/o-giu" target="_blank" rel="noopener noreferrer">@oGiu</a><br>
-**License / Licença:** <a href="https://raw.githubusercontent.com/o-giu/Scripts/refs/heads/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT</a><br>
 *Use at your own risk. / Use por sua conta e risco.*
-
 </div>
