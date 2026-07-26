@@ -2,7 +2,7 @@
 // @name        Instant Gaming - Giveaway Auto Participate
 // @match       https://www.instant-gaming.com/*
 // @grant       none
-// @version     1.1
+// @version     1.2
 // @author      oGiu
 // @description This script automates entries for giveaways on the IG website
 // ==/UserScript==
@@ -156,7 +156,7 @@
     ];
 
     let links = JSON.parse(localStorage.getItem('ig_links') || '[]');
-    if (links.length === 0) {
+    if (links.length !== defaultLinks.length) {
         links = defaultLinks;
         localStorage.setItem('ig_links', JSON.stringify(links));
     }
@@ -230,139 +230,32 @@
 
     const style = document.createElement('style');
     style.innerHTML = `
-        #ig-panel-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 280px;
-            background: #1e1e1e;
-            color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            z-index: 9999999;
-            overflow: hidden;
-            border: 1px solid #333;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        #ig-panel-container.minimized {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            cursor: pointer;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #ig-panel-container.minimized .header,
-        #ig-panel-container.minimized .content { display: none !important; }
-        #ig-panel-container.minimized .min-icon {
-            display: block;
-            font-size: 28px;
-            animation: pulse 2s infinite;
-        }
+        #ig-panel-container { position: fixed; bottom: 20px; right: 20px; width: 280px; background: #1e1e1e; color: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; z-index: 9999999; overflow: hidden; border: 1px solid #333; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        #ig-panel-container.minimized { width: 60px; height: 60px; border-radius: 50%; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; }
+        #ig-panel-container.minimized .header, #ig-panel-container.minimized .content { display: none !important; }
+        #ig-panel-container.minimized .min-icon { display: block; font-size: 28px; animation: pulse 2s infinite; }
         .min-icon { display: none; }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        .header {
-            background: linear-gradient(90deg, #6200ea, #9d46ff);
-            padding: 12px 15px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .header { background: linear-gradient(90deg, #6200ea, #9d46ff); padding: 12px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .header-buttons { display: flex; gap: 5px; }
-        .header button {
-            background: rgba(0,0,0,0.2);
-            border: none;
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
+        .header button { background: rgba(0,0,0,0.2); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .header button:hover { background: rgba(0,0,0,0.4); }
         .content { padding: 15px; }
-        .progress-container {
-            background: #333;
-            border-radius: 10px;
-            height: 8px;
-            width: 100%;
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-        .progress-bar {
-            background: #00e676;
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s ease;
-            box-shadow: 0 0 8px rgba(0, 230, 118, 0.5);
-        }
-        .status-info {
-            font-size: 13px;
-            color: #ccc;
-            margin-bottom: 15px;
-            text-align: center;
-            line-height: 1.4;
-            background: #252525;
-            padding: 10px;
-            border-radius: 8px;
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
+        .progress-container { background: #333; border-radius: 10px; height: 8px; width: 100%; margin-bottom: 12px; overflow: hidden; }
+        .progress-bar { background: #00e676; height: 100%; width: 0%; transition: width 0.3s ease; box-shadow: 0 0 8px rgba(0, 230, 118, 0.5); }
+        .status-info { font-size: 13px; color: #ccc; margin-bottom: 15px; text-align: center; line-height: 1.4; background: #252525; padding: 10px; border-radius: 8px; min-height: 40px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
         .status-info strong { color: #fff; }
         .controls { display: flex; gap: 10px; flex-wrap: wrap;}
-        .btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            transition: transform 0.1s, opacity 0.2s;
-            text-transform: uppercase;
-            min-width: 80px;
-        }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; transition: transform 0.1s, opacity 0.2s; text-transform: uppercase; min-width: 80px; }
         .btn:active { transform: scale(0.96); }
         .btn:hover { opacity: 0.9; }
         .btn-start { background: #00e676; color: #004d40; }
         .btn-start.paused { background: #ffea00; color: #3e2723; }
         .btn-reset { background: #ff1744; color: white; }
         .btn-list { background: #2979ff; color: white; flex-basis: 100%; margin-top: 5px;}
-        #ig-list-container {
-            margin-top: 15px;
-            background: #121212;
-            border-radius: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-            border: 1px solid #333;
-        }
+        #ig-list-container { margin-top: 15px; background: #121212; border-radius: 8px; max-height: 200px; overflow-y: auto; display: none; border: 1px solid #333; }
         #ig-list-container.visible { display: block; }
-        .list-item {
-            padding: 8px 10px;
-            border-bottom: 1px solid #2c2c2c;
-            font-size: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .list-item { padding: 8px 10px; border-bottom: 1px solid #2c2c2c; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
         .list-item:last-child { border-bottom: none; }
         .list-item.participated { border-left: 3px solid #00e676; background: #003300; }
         .list-item.ended { border-left: 3px solid #d32f2f; background: #2a0e0e; opacity: 0.7; }
@@ -370,20 +263,8 @@
         .list-item.current { background: #2c2c2c; }
         .item-name { font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
         .item-timer { font-family: monospace; color: #aaa; font-size: 11px; }
-        .edit-controls {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #333;
-        }
-        .btn-action {
-            padding: 5px 0;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 4px;
-            flex: 1;
-        }
+        .edit-controls { display: flex; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #333; }
+        .btn-action { padding: 5px 0; font-size: 16px; font-weight: bold; border-radius: 4px; flex: 1; }
         .btn-add { background: #2e7d32; color: white; }
         .btn-remove { background: #c62828; color: white; }
         ::-webkit-scrollbar { width: 6px; }
@@ -394,7 +275,6 @@
 
     const container = document.createElement('div');
     container.id = 'ig-panel-container';
-
     container.innerHTML = `
         <div class="min-icon">🎁</div>
         <div class="header">
@@ -438,7 +318,6 @@
     const btnRemove = document.getElementById('ig-btn-remove');
 
     let db = JSON.parse(localStorage.getItem('ig_db') || '{}');
-
     let isMinimized = localStorage.getItem('ig_minimized') === 'true';
     if(isMinimized) container.classList.add('minimized');
 
@@ -446,7 +325,6 @@
         if (container.classList.contains('minimized')) {
             container.classList.remove('minimized');
             localStorage.setItem('ig_minimized', 'false');
-            return;
         }
     };
 
@@ -474,11 +352,7 @@
     btnToggle.onclick = function(e) {
         e.stopPropagation();
         listContainer.classList.toggle('visible');
-        if (listContainer.classList.contains('visible')) {
-            editControls.style.display = 'flex';
-        } else {
-            editControls.style.display = 'none';
-        }
+        editControls.style.display = listContainer.classList.contains('visible') ? 'flex' : 'none';
     };
 
     btnAdd.onclick = function(e) {
@@ -506,62 +380,33 @@
         }
     };
 
-    window.alert = function() { return true; };
-    window.confirm = function() { return true; };
+    window.alert = () => true;
+    window.confirm = () => true;
     const originalOpen = window.open;
-    window.open = function(url, target, features) {
+    window.open = (url, target, features) => {
         const win = originalOpen(url, target, features);
-        if (win) {
-            setTimeout(() => {
-               try { win.close(); } catch(e){}
-            }, 1500);
-        }
-        return { close: function(){} };
+        if (win) setTimeout(() => { try { win.close(); } catch(e){} }, 1500);
+        return { close: () => {} };
     };
 
-    function getNameFromUrl(url) {
-        return url.split('/').pop().split('?')[0];
-    }
+    function getNameFromUrl(url) { return url.split('/').pop().split('?')[0]; }
 
     function formatTime(seconds) {
         if (seconds <= 0) return t('ended');
-        const d = Math.floor(seconds / 86400);
-        const h = Math.floor((seconds % 86400) / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-
-        if (d > 0) return `${d}d ${h}h`;
-        return `${h}h ${m}m ${s}s`;
+        const d = Math.floor(seconds / 86400), h = Math.floor((seconds % 86400) / 3600), m = Math.floor((seconds % 3600) / 60);
+        return d > 0 ? `${d}d ${h}h` : `${h}h ${m}m ${Math.floor(seconds % 60)}s`;
     }
 
     function updateListUI() {
         const currentIndex = parseInt(localStorage.getItem('ig_index') || '0');
         let html = '';
-
         links.forEach((link, idx) => {
-            const name = getNameFromUrl(link);
-            const data = db[name];
-            let statusClass = 'pending';
-            let timerText = '--:--:--';
-
-            if (data) {
-                if (data.ended) statusClass = 'ended';
-                else if (data.participated) statusClass = 'participated';
-            }
+            const name = getNameFromUrl(link), data = db[name];
+            let statusClass = 'pending', timerText = '--:--:--';
+            if (data) { if (data.ended) statusClass = 'ended'; else if (data.participated) statusClass = 'participated'; }
             if (idx === currentIndex) statusClass += ' current';
-
-            if (data && data.endDate) {
-                const now = Math.floor(Date.now() / 1000);
-                const diff = data.endDate - now;
-                timerText = formatTime(diff);
-            }
-
-            html += `
-                <div class="list-item ${statusClass}" id="item-${idx}">
-                    <span class="item-name">${idx + 1}. ${name}</span>
-                    <span class="item-timer" data-end="${data ? data.endDate : 0}">${timerText}</span>
-                </div>
-            `;
+            if (data && data.endDate) timerText = formatTime(data.endDate - Math.floor(Date.now() / 1000));
+            html += `<div class="list-item ${statusClass}" id="item-${idx}"><span class="item-name">${idx + 1}. ${name}</span><span class="item-timer" data-end="${data ? data.endDate : 0}">${timerText}</span></div>`;
         });
         listContainer.innerHTML = html;
     }
@@ -569,58 +414,27 @@
     function startTimerLoop() {
         setInterval(() => {
             if (!listContainer.classList.contains('visible')) return;
-
-            const timers = document.querySelectorAll('.item-timer');
             const now = Math.floor(Date.now() / 1000);
-
-            timers.forEach(t => {
+            document.querySelectorAll('.item-timer').forEach(t => {
                 const end = parseInt(t.getAttribute('data-end'));
-                if (end > 0) {
-                    t.innerText = formatTime(end - now);
-                }
+                if (end > 0) t.innerText = formatTime(end - now);
             });
         }, 1000);
     }
 
     function updateUI() {
-        const isRunning = localStorage.getItem('ig_running') === 'true';
-        const currentIndex = parseInt(localStorage.getItem('ig_index') || '0');
-        const total = links.length;
-        const progress = Math.min((currentIndex / total) * 100, 100);
-
-        progressBar.style.width = `${progress}%`;
-
-        if (currentIndex >= total) {
-             statusDiv.innerHTML = t('finished', {total: total});
-             btnStart.innerText = t('end');
-             btnStart.disabled = true;
-             btnStart.classList.remove('paused');
-             return;
-        }
-
-        if (isRunning) {
-            statusDiv.innerHTML = t('running', {idx: currentIndex + 1, total: total});
-            btnStart.innerText = t('pause');
-            btnStart.classList.add('paused');
-        } else {
-            statusDiv.innerHTML = t('paused', {idx: currentIndex + 1, total: total});
-            btnStart.innerText = t('start');
-            btnStart.classList.remove('paused');
-        }
+        const isRunning = localStorage.getItem('ig_running') === 'true', currentIndex = parseInt(localStorage.getItem('ig_index') || '0'), total = links.length;
+        progressBar.style.width = `${Math.min((currentIndex / total) * 100, 100)}%`;
+        if (currentIndex >= total) { statusDiv.innerHTML = t('finished', {total: total}); btnStart.innerText = t('end'); btnStart.disabled = true; return; }
+        if (isRunning) { statusDiv.innerHTML = t('running', {idx: currentIndex + 1, total: total}); btnStart.innerText = t('pause'); btnStart.classList.add('paused'); }
+        else { statusDiv.innerHTML = t('paused', {idx: currentIndex + 1, total: total}); btnStart.innerText = t('start'); btnStart.classList.remove('paused'); }
     }
 
     btnStart.onclick = function(e) {
         e.stopPropagation();
-        const currentIndex = parseInt(localStorage.getItem('ig_index') || '0');
-        if (currentIndex >= links.length) return;
-
-        const isRunning = localStorage.getItem('ig_running') === 'true';
-        if (isRunning) {
-            localStorage.setItem('ig_running', 'false');
-        } else {
-            localStorage.setItem('ig_running', 'true');
-            runAutomation();
-        }
+        if (parseInt(localStorage.getItem('ig_index') || '0') >= links.length) return;
+        localStorage.setItem('ig_running', localStorage.getItem('ig_running') === 'true' ? 'false' : 'true');
+        if (localStorage.getItem('ig_running') === 'true') runAutomation();
         updateUI();
     };
 
@@ -636,39 +450,15 @@
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     async function clickSocialButtons() {
-        const selectors = [
-            '.boost .button:not(.validate)',
-            '.boost a.button',
-            '.actions a.button',
-            '.social-actions a',
-            '.modal .actions a.button',
-            'div[class*="actions"] a'
-        ];
+        const sel = ['.boost .button:not(.validate)', '.boost a.button', '.actions a.button', '.social-actions a', '.modal .actions a.button', 'div[class*="actions"] a'];
         let buttons = [];
-        for (let sel of selectors) {
-            const found = document.querySelectorAll(sel);
-            if (found.length > 0) {
-                const arr = Array.from(found);
-                arr.forEach(b => {
-                    if (!buttons.includes(b)) buttons.push(b);
-                });
-            }
-        }
-
-        buttons = buttons.filter(b => {
-            const cls = b.className || '';
-            const id = b.id || '';
-            return !cls.includes('validate') && !id.includes('participate');
-        });
-
+        sel.forEach(s => document.querySelectorAll(s).forEach(b => { if(!buttons.includes(b)) buttons.push(b); }));
+        buttons = buttons.filter(b => !((b.className || '').includes('validate') || (b.id || '').includes('participate')));
         if (buttons.length > 0) {
-             statusDiv.innerHTML = t('clicking_social');
-             for (const btn of buttons) {
-                 btn.click();
-                 await sleep(600);
-             }
-             statusDiv.innerHTML = t('done_social');
-             return true;
+            statusDiv.innerHTML = t('clicking_social');
+            for (const btn of buttons) { btn.click(); await sleep(600); }
+            statusDiv.innerHTML = t('done_social');
+            return true;
         }
         return false;
     }
@@ -676,100 +466,38 @@
     function scrapeData() {
         const currentName = getNameFromUrl(window.location.href);
         if (!db[currentName]) db[currentName] = {};
-
-        const countdownEl = document.getElementById('giveaway-countdown');
-        if (countdownEl) {
-            const endDate = parseInt(countdownEl.getAttribute('data-end-date'));
-            db[currentName].endDate = endDate;
-        }
-
-        const endedEl = document.querySelector('.giveaway-over');
-        if (endedEl) {
-            db[currentName].ended = true;
-            db[currentName].participated = false;
-        } else {
-            db[currentName].ended = false;
-            const participatedEl = document.querySelector('.participated');
-            if (participatedEl) {
-                db[currentName].participated = true;
-            }
-        }
-
+        const c = document.getElementById('giveaway-countdown');
+        if (c) db[currentName].endDate = parseInt(c.getAttribute('data-end-date'));
+        if (document.querySelector('.giveaway-over')) { db[currentName].ended = true; db[currentName].participated = false; }
+        else { db[currentName].ended = false; if (document.querySelector('.participated')) db[currentName].participated = true; }
         localStorage.setItem('ig_db', JSON.stringify(db));
         updateListUI();
         return db[currentName];
     }
 
     async function runAutomation() {
-        const isRunning = localStorage.getItem('ig_running') === 'true';
-        if (!isRunning) return;
-
-        let index = parseInt(localStorage.getItem('ig_index') || '0');
-
-        if (index >= links.length) {
-            localStorage.setItem('ig_running', 'false');
-            updateUI();
-            return;
-        }
-
-        const targetUrl = links[index];
-        const currentUrl = window.location.href.split('?')[0];
-
-        if (currentUrl !== targetUrl) {
-            statusDiv.innerHTML = t('going_to', {idx: index + 1});
-            await sleep(1000);
-            window.location.href = targetUrl;
-            return;
-        }
-
-        if (document.readyState !== 'complete') {
-            await new Promise(r => window.addEventListener('load', r));
-        }
+        if (localStorage.getItem('ig_running') !== 'true') return;
+        let idx = parseInt(localStorage.getItem('ig_index') || '0');
+        if (idx >= links.length) { localStorage.setItem('ig_running', 'false'); updateUI(); return; }
+        const target = links[idx], current = window.location.href.split('?')[0];
+        if (current !== target) { statusDiv.innerHTML = t('going_to', {idx: idx + 1}); await sleep(1000); window.location.href = target; return; }
+        if (document.readyState !== 'complete') await new Promise(r => window.addEventListener('load', r));
         await sleep(1500);
-
         const data = scrapeData();
-        if (data && data.ended) {
-            statusDiv.innerHTML = t('closed');
-            await sleep(2000);
-            localStorage.setItem('ig_index', (index + 1).toString());
-            runAutomation();
-            return;
-        }
-
+        if (data && data.ended) { statusDiv.innerHTML = t('closed'); await sleep(2000); localStorage.setItem('ig_index', (idx + 1).toString()); runAutomation(); return; }
         statusDiv.innerHTML = t('checking');
-
-        const mainBtn = document.querySelector('.button.validate') || document.querySelector('#giveaway_participate_button');
-
-        if (mainBtn) {
-            statusDiv.innerHTML = t('searching');
-            mainBtn.click();
-            statusDiv.innerHTML = t('waiting_frame');
-            await sleep(3000);
-        }
-
-        await clickSocialButtons();
-        await sleep(1000);
-
-        const mainBtnAgain = document.querySelector('.button.validate') || document.querySelector('#giveaway_participate_button');
-        if (mainBtnAgain && !mainBtnAgain.disabled) {
-             mainBtnAgain.click();
-             await sleep(1000);
-        }
-
-        scrapeData();
-        statusDiv.innerHTML = t('wait_success');
-        await sleep(2000);
-
-        localStorage.setItem('ig_index', (index + 1).toString());
+        const main = document.querySelector('.button.validate') || document.querySelector('#giveaway_participate_button');
+        if (main) { statusDiv.innerHTML = t('searching'); main.click(); await sleep(3000); }
+        await clickSocialButtons(); await sleep(1000);
+        const main2 = document.querySelector('.button.validate') || document.querySelector('#giveaway_participate_button');
+        if (main2 && !main2.disabled) { main2.click(); await sleep(1000); }
+        scrapeData(); statusDiv.innerHTML = t('wait_success'); await sleep(2000);
+        localStorage.setItem('ig_index', (idx + 1).toString());
         runAutomation();
     }
 
     updateListUI();
     startTimerLoop();
     updateUI();
-
-    if (localStorage.getItem('ig_running') === 'true') {
-        runAutomation();
-    }
-
+    if (localStorage.getItem('ig_running') === 'true') runAutomation();
 })();
