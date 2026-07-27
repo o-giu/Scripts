@@ -1,7 +1,6 @@
 // ==UserScript==
 // @name         ItzAGud - Automation
-// @version      2.1
-// @description  Automatização de tasks, sorteio, roleta e chat do site
+// @version      2.2
 // @author       oGiu
 // @match        https://www.itzagud.net/*
 // @grant        GM_addStyle
@@ -16,17 +15,19 @@
   GM_addStyle(`
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap');
     #iga-toggle { position: fixed; top: 16px; right: 16px; z-index: 1000000; width: 42px; height: 42px; border-radius: 11px; background: #10b981; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-    #iga-container { position: fixed; top: 66px; right: 16px; z-index: 999999; width: 300px; font-family: 'JetBrains Mono', monospace; background: rgba(12,12,14,0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: hidden; color: white; backdrop-filter: blur(10px); }
+    #iga-container { position: fixed; top: 66px; right: 16px; z-index: 999999; width: 320px; font-family: 'JetBrains Mono', monospace; background: rgba(12,12,14,0.98); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: hidden; color: white; backdrop-filter: blur(10px); }
     .iga-hidden { display: none !important; }
     .iga-header { padding: 12px; background: rgba(16,185,129,0.1); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-    .iga-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; max-height: 75vh; overflow-y: auto; }
+    .iga-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; max-height: 70vh; overflow-y: auto; }
     .iga-card { border-radius: 10px; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
     .iga-settings-panel { padding: 12px; background: #18181b; border-bottom: 1px solid #27272a; display: none; flex-direction: column; gap: 6px; }
     .iga-settings-panel.open { display: flex; }
-    .iga-set-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; }
+    .iga-set-row { display: flex; justify-content: space-between; align-items: center; font-size: 10px; margin-bottom: 2px; }
     .iga-set-title { font-size: 9px; font-weight: 800; color: #10b981; margin: 8px 0 4px 0; text-transform: uppercase; border-bottom: 1px solid #27272a; padding-bottom: 2px; }
     .iga-input { background: #27272a; border: 1px solid #3f3f46; color: white; border-radius: 4px; padding: 2px 4px; width: 45px; text-align: center; }
     .iga-alert { padding: 8px; border-radius: 6px; font-size: 10px; border-left: 4px solid #10b981; background: rgba(255,255,255,0.05); margin-bottom: 5px; }
+    #iga-save-btn { background: #10b981; color: white; border: none; border-radius: 6px; padding: 6px; font-weight: 800; cursor: pointer; margin-top: 10px; font-size: 10px; }
+    .iga-rank-grid { display: grid; grid-template-columns: 1fr 40px 55px; gap: 8px; align-items: center; font-size: 9px; }
   `);
 
   const CATEGORIES = [
@@ -56,10 +57,17 @@
 
   const container = document.createElement('div');
   container.id = 'iga-container'; container.className = 'iga-hidden';
-  let gvHtml = CATEGORIES.map(cat => `<div class="iga-set-row"><span>${cat.label}</span><input type="checkbox" id="iga-set-${cat.id}"></div>`).join('');
+
+  let rankHtml = CATEGORIES.map(cat => `
+    <div class="iga-rank-grid">
+      <span>${cat.label}</span>
+      <input type="checkbox" id="iga-set-${cat.id}">
+      <input type="number" id="iga-ent-${cat.id}" class="iga-input" placeholder="Ent">
+    </div>
+  `).join('');
 
   container.innerHTML = `
-    <div class="iga-header"><span style="font-weight:800; font-size:12px; color:#10b981;">ITZAGUD V2.1</span><button id="iga-cfg-btn" style="background:none; border:none; cursor:pointer;">⚙️</button></div>
+    <div class="iga-header"><span style="font-weight:800; font-size:12px; color:#10b981;">ITZAGUD V2.2</span><button id="iga-cfg-btn" style="background:none; border:none; cursor:pointer;">⚙️</button></div>
     <div class="iga-settings-panel" id="iga-cfg">
       <div class="iga-set-title">Geral</div>
       <div class="iga-set-row"><span>Auto Tasks</span><input type="checkbox" id="iga-set-tasks"></div>
@@ -67,8 +75,9 @@
       <div class="iga-set-row"><span>Auto Chat</span><input type="checkbox" id="iga-set-chat"></div>
       <div class="iga-set-row"><span>Reserva Clams</span><input type="number" id="iga-set-minclams" class="iga-input"></div>
       <div class="iga-set-row"><span>Ciclo (min)</span><input type="number" id="iga-set-cycle" class="iga-input"></div>
-      <div class="iga-set-title">Filtros de Rank</div>
-      ${gvHtml}
+      <div class="iga-set-title">Rank | Ativar | Entradas</div>
+      ${rankHtml}
+      <button id="iga-save-btn">SALVAR CONFIGURAÇÕES</button>
     </div>
     <div class="iga-body">
       <div id="iga-alerts"></div>
@@ -85,19 +94,31 @@
     document.getElementById('iga-set-chat').checked = GM_getValue('autoChat', true);
     document.getElementById('iga-set-minclams').value = GM_getValue('minClamsReserve', 100);
     document.getElementById('iga-set-cycle').value = GM_getValue('cycleMin', 15);
-    CATEGORIES.forEach(cat => document.getElementById(`iga-set-${cat.id}`).checked = GM_getValue(`cat_${cat.id}`, true));
+    CATEGORIES.forEach(cat => {
+      document.getElementById(`iga-set-${cat.id}`).checked = GM_getValue(`cat_${cat.id}`, true);
+      document.getElementById(`iga-ent-${cat.id}`).value = GM_getValue(`ent_${cat.id}`, 1);
+    });
   };
   syncUI();
 
   document.getElementById('iga-cfg-btn').onclick = () => document.getElementById('iga-cfg').classList.toggle('open');
   toggle.onclick = () => container.classList.toggle('iga-hidden');
-  document.getElementById('iga-set-tasks').onchange = (e) => GM_setValue('autoTasks', e.target.checked);
-  document.getElementById('iga-set-wheel').onchange = (e) => GM_setValue('autoWheel', e.target.checked);
-  document.getElementById('iga-set-chat').onchange = (e) => GM_setValue('autoChat', e.target.checked);
-  document.getElementById('iga-set-minclams').onchange = (e) => GM_setValue('minClamsReserve', parseInt(e.target.value));
-  document.getElementById('iga-set-cycle').onchange = (e) => GM_setValue('cycleMin', parseInt(e.target.value));
-  CATEGORIES.forEach(cat => document.getElementById(`iga-set-${cat.id}`).onchange = (e) => GM_setValue(`cat_${cat.id}`, e.target.checked));
-  document.getElementById('iga-force-btn').onclick = () => { GM_setValue('igaLastCycle', '0'); sessionStorage.removeItem('igaPhase'); sessionStorage.removeItem('igaActive'); window.location.reload(); };
+
+  document.getElementById('iga-save-btn').onclick = () => {
+    GM_setValue('autoTasks', document.getElementById('iga-set-tasks').checked);
+    GM_setValue('autoWheel', document.getElementById('iga-set-wheel').checked);
+    GM_setValue('autoChat', document.getElementById('iga-set-chat').checked);
+    GM_setValue('minClamsReserve', parseInt(document.getElementById('iga-set-minclams').value));
+    GM_setValue('cycleMin', parseInt(document.getElementById('iga-set-cycle').value));
+    CATEGORIES.forEach(cat => {
+      GM_setValue(`cat_${cat.id}`, document.getElementById(`iga-set-${cat.id}`).checked);
+      GM_setValue(`ent_${cat.id}`, parseInt(document.getElementById(`iga-ent_${cat.id}`).value) || 1);
+    });
+    alert$('Configurações Salvas!', 'green');
+    document.getElementById('iga-cfg').classList.remove('open');
+  };
+
+  document.getElementById('iga-force-btn').onclick = () => { GM_setValue('igaLastCycle', '0'); sessionStorage.clear(); window.location.reload(); };
 
   function getCurrentClams() {
     const clamLabel = Array.from(document.querySelectorAll('span')).find(s => s.textContent.trim() === 'Clams');
@@ -108,17 +129,28 @@
     const enterButtons = Array.from(document.querySelectorAll('button')).filter(b => b.innerText.trim().toLowerCase() === 'enter' && !b.disabled && b.offsetParent !== null);
     if (enterButtons.length === 0) return false;
     const currentClams = getCurrentClams();
+
     for (const btn of enterButtons) {
-      const row = btn.parentElement.parentElement.parentElement;
+      const row = btn.closest('.grid') || btn.parentElement.parentElement.parentElement;
       if (!row) continue;
       const rowText = row.innerText.toUpperCase();
       const icon = row.querySelector('div[title]');
       const iconTitle = icon ? icon.getAttribute('title').toUpperCase() : "";
       const matchedCat = CATEGORIES.find(cat => iconTitle.includes(cat.label) || rowText.includes(cat.label));
+
       if (isPointsTab) {
         if (matchedCat && GM_getValue(`cat_${matchedCat.id}`, true)) {
-          if (currentClams - 30 < GM_getValue('minClamsReserve', 100)) { alert$(`Reserva Clams atingida!`, 'yellow'); return false; }
-          alert$(`Entrando: ${matchedCat.label}`, 'green');
+          const desiredEntries = parseInt(GM_getValue(`ent_${matchedCat.id}`, 1));
+          if (currentClams - (30 * desiredEntries) < GM_getValue('minClamsReserve', 100)) { alert$(`Reserva atingida!`, 'yellow'); return false; }
+          const entryInput = row.querySelector('input[type="number"]');
+          if (entryInput) {
+            const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+            nativeValueSetter.call(entryInput, desiredEntries);
+            entryInput.dispatchEvent(new Event('input', { bubbles: true }));
+            entryInput.dispatchEvent(new Event('change', { bubbles: true }));
+            await sleep(800);
+          }
+          alert$(`Entrando: ${matchedCat.label} (${desiredEntries}x)`, 'green');
           await doClickSequence(btn);
           return true;
         }
@@ -145,11 +177,63 @@
     const claim = Array.from(document.querySelectorAll('button')).find(b => (b.innerText.toLowerCase().includes('claim') || b.innerText.toLowerCase() === 'claim reward') && b.offsetParent !== null);
     if (claim) { alert$(`Coletando Reward...`, 'green'); humanClick(claim); await sleep(3000); window.location.reload(); return true; }
 
-    const iframe = document.querySelector('iframe[src*="youtube.com"]');
-    if (iframe) {
-        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-        const hasTimer = document.body.innerText.match(/\d{1,2}:\d{2}/);
-        if (hasTimer) return true;
+    const timerSpan = Array.from(document.querySelectorAll('span')).find(s => s.innerText.includes(' / ') && s.parentElement.innerText.includes('Watched:'));
+    if (timerSpan) {
+        const text = timerSpan.innerText;
+        const currentVal = text.split(' / ')[0].trim();
+        const lastVal = sessionStorage.getItem('igaLastTVal');
+        const lastTs = parseInt(sessionStorage.getItem('igaLastTStamp') || '0');
+        const now = Date.now();
+        const closeBtn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText === '✕' || b.getAttribute('title') === 'Close') && b.offsetParent !== null);
+
+        if (lastVal === currentVal) {
+            if (lastTs === 0) sessionStorage.setItem('igaLastTStamp', now.toString());
+            if (now - lastTs > 10000) {
+               const iframe = document.querySelector('iframe[src*="youtube.com"]');
+               if (iframe) {
+                   iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                   humanClick(iframe.parentElement);
+                   humanClick(iframe);
+               }
+            }
+            if (now - lastTs > 45000) {
+               const currentLabel = sessionStorage.getItem('igaCurrentVideoLabel');
+               alert$(`Vídeo Pulado: ${currentLabel}`, 'yellow');
+               if (currentLabel) {
+                   let list = JSON.parse(sessionStorage.getItem('igaSkipList') || '[]');
+                   if (!list.includes(currentLabel)) list.push(currentLabel);
+                   sessionStorage.setItem('igaSkipList', JSON.stringify(list));
+               }
+               if (closeBtn) humanClick(closeBtn);
+               sessionStorage.removeItem('igaLastTStamp');
+               sessionStorage.removeItem('igaLastTVal');
+               sessionStorage.removeItem('igaCurrentVideoLabel');
+               return true;
+            }
+        } else {
+            sessionStorage.setItem('igaLastTVal', currentVal);
+            sessionStorage.setItem('igaLastTStamp', now.toString());
+        }
+        return true;
+    }
+
+    const skipList = JSON.parse(sessionStorage.getItem('igaSkipList') || '[]');
+    const articles = Array.from(document.querySelectorAll('article'));
+    const nextTask = articles.find(art => {
+        const label = art.getAttribute('aria-label');
+        const btn = art.querySelector('button');
+        return label && !skipList.includes(label) && btn && btn.innerText.toLowerCase().includes('watch & earn') && !btn.disabled;
+    });
+
+    if (nextTask) {
+        const label = nextTask.getAttribute('aria-label');
+        const btn = nextTask.querySelector('button');
+        alert$(`Iniciando Vídeo...`, 'green');
+        sessionStorage.setItem('igaCurrentVideoLabel', label);
+        sessionStorage.setItem('igaLastTStamp', Date.now().toString());
+        humanClick(btn);
+        await sleep(3000);
+        return true;
     }
 
     const openPlayer = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase().includes('open player') && b.offsetParent !== null);
@@ -158,25 +242,56 @@
     const start = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase() === 'start task' && !b.disabled && b.offsetParent !== null);
     if (start) { alert$(`Iniciando Task...`, 'green'); humanClick(start); await sleep(2500); return true; }
 
-    const watchEarn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase() === 'watch & earn' && !b.disabled && b.offsetParent !== null);
-    if (watchEarn) { alert$(`Iniciando Watch...`, 'green'); humanClick(watchEarn); await sleep(2500); return true; }
-
     return false;
   }
 
   async function doWheel() {
-    if (!GM_getValue('autoWheel', true)) return;
-    const wheelBtn = Array.from(document.querySelectorAll('button')).find(b => (b.innerText.toLowerCase().includes('spin') || b.innerText.toLowerCase().includes('wheel')) && !b.disabled && b.offsetParent !== null);
-    if (wheelBtn) {
-      alert$('Abrindo Roda...', 'green');
-      humanClick(wheelBtn); await sleep(3500);
-      const spinFinal = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase() === 'spin' && !b.disabled && b.offsetParent !== null);
-      if (spinFinal) {
-        humanClick(spinFinal); await sleep(6000);
-        const done = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase() === 'done' && b.offsetParent !== null);
-        if (done) humanClick(done);
-      }
+    if (!GM_getValue('autoWheel', true)) return false;
+
+    const modal = document.querySelector('div.bg-zinc-950\\/70.shadow-2xl');
+    if (modal && modal.offsetParent !== null) {
+        const wonText = modal.innerText.includes('You won');
+        const doneBtn = Array.from(modal.querySelectorAll('button')).find(b => b.innerText.trim() === 'Done');
+
+        if (wonText && doneBtn) {
+            alert$(`Resultado obtido, finalizando...`, 'green');
+            humanClick(doneBtn);
+            await sleep(2000);
+            return true;
+        }
+
+        const spinBtn = Array.from(modal.querySelectorAll('button')).find(b =>
+            b.innerText.trim().toUpperCase() === 'SPIN' && !b.disabled && b.className.includes('bg-emerald')
+        );
+        if (spinBtn) {
+            alert$(`Girando...`, 'green');
+            humanClick(spinBtn);
+            await sleep(12000);
+            return true;
+        }
+        return true;
     }
+
+    const triggerBtn = Array.from(document.querySelectorAll('button')).find(b =>
+        b.innerText.includes('Spin') && b.offsetParent !== null && (b.innerText.includes('🎡') || b.className.includes('sky'))
+    );
+
+    if (triggerBtn && !triggerBtn.disabled) {
+        const group = triggerBtn.closest('.group');
+        const tooltip = group ? group.querySelector('span.pointer-events-none') : null;
+        const match = tooltip ? tooltip.innerText.match(/(\d+)\/\d+/) : null;
+
+        if (tooltip && tooltip.innerText.includes('cooldown')) return false;
+
+        if (match && parseInt(match[1]) > 0) {
+            alert$(`Abrindo Roleta...`, 'green');
+            humanClick(triggerBtn);
+            await sleep(3500);
+            return true;
+        }
+    }
+
+    return false;
   }
 
   async function runAutomation() {
@@ -199,7 +314,7 @@
         const send = Array.from(document.querySelectorAll('button')).find(b => b.innerText.trim() === 'Send');
         if (input && send) {
           humanClick(input); await sleep(1000);
-          const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+          const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
           setter ? setter.call(input, '👍') : input.value = '👍';
           input.dispatchEvent(new Event('input', { bubbles: true }));
           await sleep(1000); humanClick(send); GM_setValue('igaLastChatSentAt', Date.now().toString()); await sleep(3000);
@@ -211,27 +326,27 @@
       document.getElementById('next-step-txt').textContent = "Processando Tasks...";
       if (!window.location.pathname.includes('/tasks')) { window.location.href = 'https://www.itzagud.net/tasks'; return; }
       const working = await processTasks();
-      if (!working) { sessionStorage.setItem('igaPhase', 'wheel'); runAutomation(); }
-    }
-    else if (phase === 'wheel') {
-      document.getElementById('next-step-txt').textContent = "Processando Wheel...";
-      await doWheel();
-      sessionStorage.setItem('igaPhase', 'points');
-      window.location.href = 'https://www.itzagud.net/steam-key-giveaways?tab=points';
+      if (!working) { sessionStorage.setItem('igaPhase', 'points'); runAutomation(); }
     }
     else if (phase === 'points') {
       document.getElementById('next-step-txt').textContent = "Processando Points...";
       if (!window.location.search.includes('tab=points')) { window.location.href = 'https://www.itzagud.net/steam-key-giveaways?tab=points'; return; }
+      const wheelWorking = await doWheel();
+      if (wheelWorking) return;
       const entered = await processGiveaways(true);
       if (!entered) { sessionStorage.setItem('igaPhase', 'clams'); window.location.href = 'https://www.itzagud.net/steam-key-giveaways?tab=clams'; }
     }
-    else {
+    else if (phase === 'clams') {
       document.getElementById('next-step-txt').textContent = "Processando Clams...";
       if (!window.location.search.includes('tab=clams')) { window.location.href = 'https://www.itzagud.net/steam-key-giveaways?tab=clams'; return; }
+      const wheelWorking = await doWheel();
+      if (wheelWorking) return;
       const entered = await processGiveaways(false);
       if (!entered) {
         GM_setValue('igaLastCycle', Date.now().toString());
-        sessionStorage.removeItem('igaActive'); sessionStorage.setItem('igaPhase', 'tasks');
+        sessionStorage.removeItem('igaActive');
+        sessionStorage.removeItem('igaSkipList');
+        sessionStorage.setItem('igaPhase', 'tasks');
         alert$('Ciclo Finalizado!', 'green'); window.location.reload();
       }
     }
