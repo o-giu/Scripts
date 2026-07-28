@@ -70,21 +70,21 @@
   container.innerHTML = `
     <div class="iga-header"><span style="font-weight:800; font-size:12px; color:#10b981;">ITZAGUD V2.2</span><button id="iga-cfg-btn" style="background:none; border:none; cursor:pointer;">⚙️</button></div>
     <div class="iga-settings-panel" id="iga-cfg">
-      <div class="iga-set-title">Geral</div>
+      <div class="iga-set-title">General</div>
       <div class="iga-set-row"><span>Auto Tasks</span><input type="checkbox" id="iga-set-tasks"></div>
       <div class="iga-set-row"><span>Auto Wheel</span><input type="checkbox" id="iga-set-wheel"></div>
       <div class="iga-set-row"><span>Auto Chat</span><input type="checkbox" id="iga-set-chat"></div>
-      <div class="iga-set-row"><span>Reserva Clams</span><input type="number" id="iga-set-minclams" class="iga-input"></div>
-      <div class="iga-set-row"><span>Ciclo (min)</span><input type="number" id="iga-set-cycle" class="iga-input"></div>
-      <div class="iga-set-title">Rank | Ativar | Entradas</div>
+      <div class="iga-set-row"><span>Clams Reserve</span><input type="number" id="iga-set-minclams" class="iga-input"></div>
+      <div class="iga-set-row"><span>Cycle (min)</span><input type="number" id="iga-set-cycle" class="iga-input"></div>
+      <div class="iga-set-title">Rank | Enable | Entries</div>
       ${rankHtml}
-      <button id="iga-save-btn">SALVAR CONFIGURAÇÕES</button>
+      <button id="iga-save-btn">SAVE SETTINGS</button>
     </div>
     <div class="iga-body">
       <div id="iga-alerts"></div>
-      <div class="iga-card"><div style="font-size:8px; color:#52525b;">TIMER DO CICLO</div><div id="cycle-timer" style="font-size:14px; font-weight:bold; color:#10b981; margin-top:2px;">...</div></div>
-      <div class="iga-card"><div style="font-size:8px; color:#52525b;">STATUS</div><div id="next-step-txt" style="font-size:10px; color:#e4e4e7; margin-top:4px;">Aguardando...</div></div>
-      <button id="iga-force-btn" style="width: 100%; padding: 10px; background: #10b981; border: none; color: white; border-radius: 8px; font-weight: 700; cursor: pointer;">REINICIAR E FORÇAR SCAN</button>
+      <div class="iga-card"><div style="font-size:8px; color:#52525b;">CYCLE TIMER</div><div id="cycle-timer" style="font-size:14px; font-weight:bold; color:#10b981; margin-top:2px;">...</div></div>
+      <div class="iga-card"><div style="font-size:8px; color:#52525b;">STATUS</div><div id="next-step-txt" style="font-size:10px; color:#e4e4e7; margin-top:4px;">Waiting...</div></div>
+      <button id="iga-force-btn" style="width: 100%; padding: 10px; background: #10b981; border: none; color: white; border-radius: 8px; font-weight: 700; cursor: pointer;">RESET & FORCE SCAN</button>
     </div>
   `;
   document.body.appendChild(container);
@@ -113,9 +113,9 @@
     GM_setValue('cycleMin', parseInt(document.getElementById('iga-set-cycle').value));
     CATEGORIES.forEach(cat => {
       GM_setValue(`cat_${cat.id}`, document.getElementById(`iga-set-${cat.id}`).checked);
-      GM_setValue(`ent_${cat.id}`, parseInt(document.getElementById(`iga-ent_${cat.id}`).value) || 1);
+      GM_setValue(`ent_${cat.id}`, parseInt(document.getElementById(`iga-ent-${cat.id}`).value) || 1);
     });
-    alert$('Configurações Salvas!', 'green');
+    alert$('Settings Saved!', 'green');
     document.getElementById('iga-cfg').classList.remove('open');
   };
 
@@ -142,7 +142,7 @@
       if (isPointsTab) {
         if (matchedCat && GM_getValue(`cat_${matchedCat.id}`, true)) {
           const desiredEntries = parseInt(GM_getValue(`ent_${matchedCat.id}`, 1));
-          if (currentClams - (30 * desiredEntries) < GM_getValue('minClamsReserve', 100)) { alert$(`Reserva atingida!`, 'yellow'); return false; }
+          if (currentClams - (30 * desiredEntries) < GM_getValue('minClamsReserve', 100)) { alert$(`Reserve reached!`, 'yellow'); return false; }
           const entryInput = row.querySelector('input[type="number"]');
           if (entryInput) {
             const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
@@ -151,12 +151,12 @@
             entryInput.dispatchEvent(new Event('change', { bubbles: true }));
             await sleep(800);
           }
-          alert$(`Entrando: ${matchedCat.label} (${desiredEntries}x)`, 'green');
+          alert$(`Entering: ${matchedCat.label} (${desiredEntries}x)`, 'green');
           await doClickSequence(btn);
           return true;
         }
       } else {
-        alert$(`Entrando em Clams`, 'green');
+        alert$(`Entering Clams`, 'green');
         await doClickSequence(btn);
         return true;
       }
@@ -176,7 +176,7 @@
 
   async function processTasks() {
     const claim = Array.from(document.querySelectorAll('button')).find(b => (b.innerText.toLowerCase().includes('claim') || b.innerText.toLowerCase() === 'claim reward') && b.offsetParent !== null);
-    if (claim) { alert$(`Coletando Reward...`, 'green'); humanClick(claim); await sleep(3000); window.location.reload(); return true; }
+    if (claim) { alert$(`Claiming Reward...`, 'green'); humanClick(claim); await sleep(3000); window.location.reload(); return true; }
 
     const timerSpan = Array.from(document.querySelectorAll('span')).find(s => s.innerText.includes(' / ') && s.parentElement.innerText.includes('Watched:'));
     if (timerSpan) {
@@ -199,7 +199,7 @@
             }
             if (now - lastTs > 45000) {
                const currentLabel = sessionStorage.getItem('igaCurrentVideoLabel');
-               alert$(`Vídeo Pulado: ${currentLabel}`, 'yellow');
+               alert$(`Video Skipped: ${currentLabel}`, 'yellow');
                if (currentLabel) {
                    let list = JSON.parse(sessionStorage.getItem('igaSkipList') || '[]');
                    if (!list.includes(currentLabel)) list.push(currentLabel);
@@ -229,7 +229,7 @@
     if (nextTask) {
         const label = nextTask.getAttribute('aria-label');
         const btn = nextTask.querySelector('button');
-        alert$(`Iniciando Vídeo...`, 'green');
+        alert$(`Starting Video...`, 'green');
         sessionStorage.setItem('igaCurrentVideoLabel', label);
         sessionStorage.setItem('igaLastTStamp', Date.now().toString());
         humanClick(btn);
@@ -238,10 +238,10 @@
     }
 
     const openPlayer = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase().includes('open player') && b.offsetParent !== null);
-    if (openPlayer) { alert$(`Abrindo Player...`, 'green'); humanClick(openPlayer); await sleep(2500); return true; }
+    if (openPlayer) { alert$(`Opening Player...`, 'green'); humanClick(openPlayer); await sleep(2500); return true; }
 
     const start = Array.from(document.querySelectorAll('button')).find(b => b.innerText.toLowerCase() === 'start task' && !b.disabled && b.offsetParent !== null);
-    if (start) { alert$(`Iniciando Task...`, 'green'); humanClick(start); await sleep(2500); return true; }
+    if (start) { alert$(`Starting Task...`, 'green'); humanClick(start); await sleep(2500); return true; }
 
     return false;
   }
@@ -255,7 +255,7 @@
         const doneBtn = Array.from(modal.querySelectorAll('button')).find(b => b.innerText.trim() === 'Done');
 
         if (wonText && doneBtn) {
-            alert$(`Resultado obtido, finalizando...`, 'green');
+            alert$(`Result obtained, finishing...`, 'green');
             humanClick(doneBtn);
             await sleep(2000);
             return true;
@@ -265,7 +265,7 @@
             b.innerText.trim().toUpperCase() === 'SPIN' && !b.disabled && b.className.includes('bg-emerald')
         );
         if (spinBtn) {
-            alert$(`Girando...`, 'green');
+            alert$(`Spinning...`, 'green');
             humanClick(spinBtn);
             await sleep(12000);
             return true;
@@ -285,7 +285,7 @@
         if (tooltip && tooltip.innerText.includes('cooldown')) return false;
 
         if (match && parseInt(match[1]) > 0) {
-            alert$(`Abrindo Roleta...`, 'green');
+            alert$(`Opening Wheel...`, 'green');
             humanClick(triggerBtn);
             await sleep(3500);
             return true;
@@ -305,7 +305,7 @@
       return;
     }
     sessionStorage.setItem('igaActive', 'true');
-    document.getElementById('cycle-timer').textContent = "EXECUTANDO";
+    document.getElementById('cycle-timer').textContent = "EXECUTING";
     const phase = sessionStorage.getItem('igaPhase') || 'tasks';
 
     if (GM_getValue('autoChat', true) && document.body.innerText.includes('Send 1 message for +250')) {
@@ -324,13 +324,13 @@
     }
 
     if (phase === 'tasks') {
-      document.getElementById('next-step-txt').textContent = "Processando Tasks...";
+      document.getElementById('next-step-txt').textContent = "Processing Tasks...";
       if (!window.location.pathname.includes('/tasks')) { window.location.href = 'https://www.itzagud.net/tasks'; return; }
       const working = await processTasks();
       if (!working) { sessionStorage.setItem('igaPhase', 'points'); runAutomation(); }
     }
     else if (phase === 'points') {
-      document.getElementById('next-step-txt').textContent = "Processando Points...";
+      document.getElementById('next-step-txt').textContent = "Processing Points...";
       if (!window.location.search.includes('tab=points')) { window.location.href = 'https://www.itzagud.net/steam-key-giveaways?tab=points'; return; }
       const wheelWorking = await doWheel();
       if (wheelWorking) return;
@@ -338,7 +338,7 @@
       if (!entered) { sessionStorage.setItem('igaPhase', 'clams'); window.location.href = 'https://www.itzagud.net/steam-key-giveaways?tab=clams'; }
     }
     else if (phase === 'clams') {
-      document.getElementById('next-step-txt').textContent = "Processando Clams...";
+      document.getElementById('next-step-txt').textContent = "Processing Clams...";
       if (!window.location.search.includes('tab=clams')) { window.location.href = 'https://www.itzagud.net/steam-key-giveaways?tab=clams'; return; }
       const wheelWorking = await doWheel();
       if (wheelWorking) return;
@@ -348,7 +348,7 @@
         sessionStorage.removeItem('igaActive');
         sessionStorage.removeItem('igaSkipList');
         sessionStorage.setItem('igaPhase', 'tasks');
-        alert$('Ciclo Finalizado!', 'green'); window.location.reload();
+        alert$('Cycle Finished!', 'green'); window.location.reload();
       }
     }
   }
