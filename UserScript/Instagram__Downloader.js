@@ -2,7 +2,7 @@
 // @name        Instagram - Downloader
 // @namespace   oGiu
 // @match       https://www.instagram.com/*
-// @description  Adds a UI to download photos and videos on browser
+// @description Adds a UI to download photos and videos on browser
 // @grant       none
 // @version     1.0
 // @author      oGiu
