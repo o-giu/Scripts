@@ -2,7 +2,7 @@
 // @name        TikTok - Downloader
 // @namespace   oGiu
 // @match       https://www.tiktok.com/*
-// @description Adds a UI to download photos and videos on desktop
+// @description Adds a UI to download photos and videos on browser
 // @grant       none
 // @version     1.0
 // @author      oGiu
