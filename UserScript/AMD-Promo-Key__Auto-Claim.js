@@ -3,6 +3,7 @@
 // @match       https://www.amdgaming.com/promotions
 // @match       https://www.amdgaming.com/promotions/
 // @match       https://www.amdgaming.com/promotions/*
+// @description  Automates the collection of giveaway keys from the site
 // @author      oGiu
 // @grant       none
 // @version     1.1
