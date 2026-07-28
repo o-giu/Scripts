@@ -3,6 +3,7 @@
 // @version      2.2
 // @author       oGiu
 // @match        https://www.itzagud.net/*
+// @description  Automates the site's tasks, chat, roulette, and giveaways
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
